@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Flappy Bird</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body>
+    <!-- telinha da derrota -->
+    <div id="game_over">
+        FIM DE JOGO
+        <br>
+        <!-- trazendo os pontos -->
+        pontos: <span id="pontos_detail">0</span>
+        <br>
+        <button id="btn_again">JOGAR NOVAMENTE</button>
+    </div>
+    <canvas id="stage" width="288" height="512"></canvas>
+    <script>
+        //coisando o canvas
+        var stage = document.getElementById("stage");
+        var ctx = stage.getContext("2d");
+
+        //declarando variaveis das imagens
+        var bird = new Image();
+        var bg = new Image();
+        var fg = new Image();
+        var pipeNorth = new Image();
+        var pipeSouth = new Image();
+
+        //definindo imagens
+        bird.src = "img/bird.png";
+        bg.src = "img/bg.png";
+        fg.src = "img/fg.png";
+        pipeNorth.src = "img/pipeNorth.png";
+        pipeSouth.src = "img/pipeSouth.png";
+
+        //se o jogo continua ou não
+        var continua = true;
+        //espaço do poste
+        var gap = 85;
+        var constant;
+        //ponte x e y do pássaro
+        var bX = 10;
+        var bY = 150;
+        //gravidade e backup 
+        var gravity = 2.0;
+        var gravity_backup = gravity;
+        //pontuação
+        var score = 0;
+
+        //definindo áudio
+        var fly = new Audio();
+        var scor = new Audio();
+        fly.src = "som/fly.mp3";
+        scor.src = "som/score.mp3";
+
+        //chamar a porra da função para o caralho do pássaro pular (voar)
+        document.addEventListener("keydown", moveUp);
+        //chamando a função de jogar novamente caso o botão seja apertado
+        document.getElementById("btn_again").addEventListener("click", play_again);
+
+        //essa é a porra da função que faz o caralho do pássaro pular (voar)
+        function moveUp() {
+
+            if (!continua) {
+                return false;
+            }
+
+            //hora do pulo do gato
+            gravity = -9.0;
+            //som do voo
+            fly.play();
+            
+            //tempo de duração da função
+            setTimeout(function () {
+                //voltando ao normal
+                gravity = gravity_backup;
+            }, 80);
+
+        }
+
+        //função da derrota
+        function game_over() {
+            //jogo não continua
+            continua = false;
+            //pegando os pontos para ele receber a informação do score
+            document.getElementById("pontos_detail").innerText = score;
+            //mudando a telinha e seu display para "inline"
+            document.getElementById("game_over").style = "display:inline";
+            gravity = 0;
+
+        }
+
+        //função do brasileiro não desiste nunca
+        function play_again() {
+            //continua = true volta a funcionar o jogo
+            continua = true;
+            //zerando a pontuação
+            score = 0;
+            //voltando a gravidade ao ponto que estava
+            gravity = gravity_backup;
+            //voltando o pássaro ao ponto de origem
+            bY = 150;
+            //zerando o contador de pontos
+            document.getElementById("pontos_detail").innerText = score;
+            //tirando a telinha de game over
+            document.getElementById("game_over").style = "display:none";
+
+            //zerando a posição dos canos
+            pipe = [];
+            pipe[0] = {
+                x: stage.width,
+                y: 0
+            }
+
+        }
+
+        //array de cano
+        var pipe = [];
+
+        //criando um objeto
+        pipe[0] = {
+            //para começar sempre no cantinho do canvas
+            x: stage.width,
+            y: 0
+        }
+
+        //função desenhar (dara vida ao jogo)
+        function draw() {
+            //desenhar imagem dentro do canvas (fundo)
+            ctx.drawImage(bg, 0, 0);
+
+            //for "infinito" para criação dos cano
+            for (var i = 0; i < pipe.length; i++) {
+
+                constant = pipeNorth.height + gap;
+                //desenhando canos em lugares aleatórios
+                ctx.drawImage(pipeNorth, pipe[i].x, pipe[i].y);
+                ctx.drawImage(pipeSouth, pipe[i].x, pipe[i].y + constant);
+
+                //só irá prosseguir se o "continua" for = a true
+                if (continua) {
+                    pipe[i].x--;
+                }
+
+                //criando mais canos
+                if (pipe[i].x == 115) {
+                    pipe.push({
+                        x: stage.width,
+                        //gerando uma posição aleatória com base na posição anterior
+                        y: Math.floor(Math.random() * pipeNorth.height) - pipeNorth.height
+                    })
+                }
+
+                //if da colisão
+                if (bX + bird.width >= pipe[i].x && bX <= pipe[i].x + pipeNorth.width
+                    && (bY <= pipe[i].y + pipeNorth.height || bY + bird.height >= pipe[i].y + constant)
+                    || bY + bird.height >= stage.height - fg.height) {
+                    //função que será chamada caso o caraio o prassaro bata nos negocio
+                    game_over();
+                }
+
+                //aumentando o score assim que o passário passa no cano 
+                if (pipe[i].x == 5) {
+                    score++;
+                    //áudio de ganhadô
+                    scor.play();
+                }
+
+
+
+            }
+
+            //desenhando o chão
+            ctx.drawImage(fg, 0, stage.height - fg.height);
+            //desenhando o pássaro 
+            var bd = ctx.drawImage(bird, bX, bY);
+
+            //eixo do pássaro (y) incrementando a gravidade
+            bY += gravity;
+
+            //PARTE DOS PONTOS
+            //var para saber qual é a metade do canvas
+            var width_canvas = (stage.width / 2) - 10;
+            ctx.fillStyle = "#FFF";
+            ctx.strokeStyle = "#000";
+            ctx.font = "70px Flappy";
+            //texto
+            ctx.fillText(score, width_canvas, 80);
+            //sombra
+            ctx.strokeText(score, width_canvas, 80);
+
+            //rodar o frame a cada vez que funciona a função
+            requestAnimationFrame(draw);
+        }
+
+        //função para que quando a página carregar chame a ação "desenhar", para assim mostrar a img do canvas
+        window.onload = function () {
+            draw();
+        }
+    </script>
+</body>
+
+</html>

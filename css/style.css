@@ -1,0 +1,30 @@
+@font-face {
+    font-family: "Flappy";
+    src: url("fonte/flappy.ttf");
+}
+
+#btn_again{
+    padding: 2%;
+    margin-top: 4%;
+    border: none;
+    background-color: rgb(119, 199, 117);
+    /* background-color: rgb(137, 216, 216); */
+    border-radius: 10px;
+}
+
+#game_over {
+    top: 180px;
+    left: 25px;
+    padding-top: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 1px 12px black;
+    font-family: Flappy;
+    font-size: 20px;
+    color: black;
+    width: 250px;
+    height: 100px;
+    background-image: url(../img/fg.png);
+    position: absolute;
+    text-align: center;
+    display: none;
+}
